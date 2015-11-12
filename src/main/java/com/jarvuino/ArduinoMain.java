@@ -2,11 +2,19 @@ package com.jarvuino;
 
 import com.jarvuino.arduino.DigitalIO;
 import com.jarvuino.core.ArduinoChannelWrapper;
-import com.jarvuino.core.io.SynchronousResponseChannelHandler;
+import com.jarvuino.core.io.ResponseListenerTask;
+import com.jarvuino.core.io.handler.ListenerResponseChannelHandler;
+import com.jarvuino.core.io.handler.SynchronousResponseChannelHandler;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.oio.OioEventLoopGroup;
 import io.netty.channel.rxtx.RxtxDeviceAddress;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import static com.google.common.collect.Sets.newHashSet;
 import static com.jarvuino.arduino.constants.PinPower.HIGH;
 import static com.jarvuino.arduino.constants.PinPower.LOW;
 
@@ -14,12 +22,28 @@ import static com.jarvuino.arduino.constants.PinPower.LOW;
 public class ArduinoMain {
     static final String PORT = System.getProperty("gnu.io.rxtx.SerialPorts", "/dev/ttyS80");
 
+    private static final Logger LOG = LoggerFactory.getLogger(ArduinoMain.class);
+
     public static void main(String[] args) throws Exception {
         EventLoopGroup group = new OioEventLoopGroup();
 
-        SynchronousResponseChannelHandler handler = new SynchronousResponseChannelHandler();
+        SynchronousResponseChannelHandler synchronousHandler = new SynchronousResponseChannelHandler();
+        ListenerResponseChannelHandler handler = new ListenerResponseChannelHandler();
 
-        try (ArduinoChannelWrapper channel = new ArduinoChannelWrapper(new RxtxDeviceAddress(PORT), group, handler).connect()) {
+        ExecutorService executorService = Executors.newFixedThreadPool(1);
+
+        ResponseListenerTask responseListenerTask = new ResponseListenerTask(13, handler) {
+            @Override
+            public void onMessage(String msg) {
+                LOG.info("message from pin #{}: {}", pin, msg);
+            }
+        };
+
+        executorService.submit(responseListenerTask);
+
+        ArduinoChannelWrapper arduinoChannelWrapper = new ArduinoChannelWrapper(new RxtxDeviceAddress(PORT), group, synchronousHandler, handler);
+
+        try (ArduinoChannelWrapper channel = arduinoChannelWrapper.connect()) {
 
             DigitalIO digitalIO = new DigitalIO(channel);
 
@@ -31,5 +55,7 @@ public class ArduinoMain {
             digitalIO.digitalWrite(13, LOW);
             digitalIO.digitalRead(13);
         }
+
+        responseListenerTask.stop();
     }
 }

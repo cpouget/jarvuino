@@ -52,7 +52,7 @@ public class DigitalIO {
             throw Throwables.propagate(e);
         }
 
-        String msg = new ResponseFuture(channel.synchronousResponseChannelHandler).get();
+        String msg = new ResponseFuture(channel.synchronousHandler).get();
 
         LOG.debug("read value: {}", msg);
 

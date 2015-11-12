@@ -1,8 +1,9 @@
-package com.jarvuino.core.io;
+package com.jarvuino.core.io.handler;
 
-import io.netty.buffer.ByteBuf;
+import com.jarvuino.core.io.ResponseFuture;
+import com.jarvuino.core.io.msg.JarvuinoSynchronousMessage;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.SimpleChannelInboundHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,7 +11,7 @@ import java.util.concurrent.BlockingQueue;
 
 import static com.google.common.collect.Queues.newArrayBlockingQueue;
 
-public class SynchronousResponseChannelHandler extends ChannelInboundHandlerAdapter {
+public class SynchronousResponseChannelHandler extends SimpleChannelInboundHandler<JarvuinoSynchronousMessage> {
 
     private static final Logger LOG = LoggerFactory.getLogger(SynchronousResponseChannelHandler.class);
 
@@ -21,19 +22,14 @@ public class SynchronousResponseChannelHandler extends ChannelInboundHandlerAdap
     }
 
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx, JarvuinoSynchronousMessage synchronousMessage) throws Exception {
         LOG.debug("read from channel");
 
         ResponseFuture responseFuture = responseFutures.take();
-
-        ByteBuf buff = (ByteBuf) msg;
-        byte[] bytes = new byte[buff.readableBytes()];
-        buff.readBytes(bytes);
-
-        responseFuture.onMessage(new String(bytes));
+        responseFuture.onMessage(synchronousMessage.msg);
     }
 
-    public <T> void addListener(ResponseFuture responseFuture) {
+    public void addListener(ResponseFuture responseFuture) {
         responseFutures.add(responseFuture);
     }
 }

@@ -1,0 +1,9 @@
+### Java template
+*.class
+*.jar
+hs_err_pid*
+
+### JetBrains
+*.iml
+.idea/
+/out/

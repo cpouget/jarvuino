@@ -1,13 +1,16 @@
 package com.jarvuino.core;
 
 import com.google.common.base.Throwables;
-import com.jarvuino.core.io.SynchronousResponseChannelHandler;
+import com.jarvuino.core.io.MessageDecoder;
+import com.jarvuino.core.io.handler.ListenerResponseChannelHandler;
+import com.jarvuino.core.io.handler.SynchronousResponseChannelHandler;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.rxtx.RxtxChannel;
 import io.netty.channel.rxtx.RxtxChannelOption;
+import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 
 import java.io.Closeable;
@@ -20,13 +23,15 @@ public class ArduinoChannelWrapper implements Closeable {
 
     private SocketAddress socketAddress;
     private EventLoopGroup group;
-    public final SynchronousResponseChannelHandler synchronousResponseChannelHandler;
+    public final ListenerResponseChannelHandler listenerResponseChannelHandler;
+    public final SynchronousResponseChannelHandler synchronousHandler;
     private Channel channel;
 
-    public ArduinoChannelWrapper(SocketAddress socketAddress, EventLoopGroup group, SynchronousResponseChannelHandler synchronousResponseChannelHandler) {
+    public ArduinoChannelWrapper(SocketAddress socketAddress, EventLoopGroup group, SynchronousResponseChannelHandler synchronousHandler, ListenerResponseChannelHandler listenerResponseChannelHandler) {
         this.socketAddress = socketAddress;
         this.group = group;
-        this.synchronousResponseChannelHandler = synchronousResponseChannelHandler;
+        this.synchronousHandler = synchronousHandler;
+        this.listenerResponseChannelHandler = listenerResponseChannelHandler;
     }
 
     public ArduinoChannelWrapper connect() {
@@ -40,8 +45,11 @@ public class ArduinoChannelWrapper implements Closeable {
                         ch.config().setOption(RxtxChannelOption.WAIT_TIME, 2000);
 
                         ch.pipeline().addLast("encoder", new StringEncoder());
+                        ch.pipeline().addLast("string decoder", new StringDecoder());
+                        ch.pipeline().addLast("jarvuino decoder", new MessageDecoder());
 
-                        ch.pipeline().addLast("arduino channel handler", synchronousResponseChannelHandler);
+                        ch.pipeline().addLast("synchronous handler", synchronousHandler);
+                        ch.pipeline().addLast("digital listener handler", listenerResponseChannelHandler);
                     }
                 });
 
@@ -50,6 +58,9 @@ public class ArduinoChannelWrapper implements Closeable {
                 .channel();
 
         return this;
+    }
+
+    public void register() {
     }
 
     public Channel get() {

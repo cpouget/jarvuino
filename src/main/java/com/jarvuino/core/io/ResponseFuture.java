@@ -1,6 +1,7 @@
 package com.jarvuino.core.io;
 
 import com.google.common.util.concurrent.AbstractFuture;
+import com.jarvuino.core.io.handler.SynchronousResponseChannelHandler;
 
 public class ResponseFuture extends AbstractFuture<String> implements ResponseListener<String> {
 
