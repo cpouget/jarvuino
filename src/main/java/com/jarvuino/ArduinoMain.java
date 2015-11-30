@@ -14,9 +14,9 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static com.google.common.collect.Sets.newHashSet;
 import static com.jarvuino.arduino.constants.PinPower.HIGH;
 import static com.jarvuino.arduino.constants.PinPower.LOW;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 
 public class ArduinoMain {
@@ -47,8 +47,10 @@ public class ArduinoMain {
 
             DigitalIO digitalIO = new DigitalIO(channel);
 
-            //FIXME I don't know why but if I didn't make a first fake write, first read is erroneous
             digitalIO.digitalWrite(13, HIGH);
+            digitalIO.digitalWrite(13, LOW);
+            digitalIO.digitalWrite(13, HIGH);
+            digitalIO.digitalWrite(13, LOW);
 
             digitalIO.digitalWrite(13, HIGH);
             digitalIO.digitalRead(13);
@@ -57,5 +59,8 @@ public class ArduinoMain {
         }
 
         responseListenerTask.stop();
+
+        executorService.shutdown();
+        executorService.awaitTermination(10, SECONDS);
     }
 }

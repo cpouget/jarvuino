@@ -15,8 +15,6 @@ public class MessageDecoder extends MessageToMessageDecoder<String> {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, String msg, List<Object> out) throws Exception {
-        LOG.info("msg : {}", msg);
-
         if (msg.startsWith("d-list")) {
             String[] tokens = msg.split("/");
 

@@ -27,17 +27,17 @@ public class DigitalIO {
         LOG.debug("send command: pin-mode/{}/{}", pin, mode.ordinal());
 
         try {
-            channel.get().writeAndFlush(format("pin-mode/%d/%d\n", pin, mode.ordinal()));
+            channel.get().writeAndFlush(format(":pin-mode/%d/%d\n", pin, mode.ordinal()));
         } catch (Exception e) {
             throw Throwables.propagate(e);
         }
     }
 
-    public void digitalWrite(int pin, PinPower value) {
-        LOG.debug("send command: d-write/{}/{} ({} bytes)", pin, value.name(), format("d-write/%d/%d\n", pin, value.ordinal()).getBytes().length);
+    public void digitalWrite(int pin, PinPower value) throws ExecutionException, InterruptedException {
+        LOG.debug("send command: d-write/{}/{} [{}] ({} bytes)", pin, value.ordinal(), value.name(), format("d-write/%d/%d\n", pin, value.ordinal()).getBytes().length);
 
         try {
-            channel.get().writeAndFlush(format("d-write/%d/%d\n", pin, value.ordinal()));
+            channel.get().writeAndFlush(format(":d-write/%d/%d\n", pin, value.ordinal())).get();
         } catch (Exception e) {
             throw Throwables.propagate(e);
         }
@@ -46,13 +46,15 @@ public class DigitalIO {
     public String digitalRead(int pin) throws InterruptedException, ExecutionException, TimeoutException {
         LOG.debug("send command: d-read/{}", pin);
 
+        ResponseFuture responseFuture = new ResponseFuture(channel.synchronousHandler);
+
         try {
-            channel.get().writeAndFlush(format("d-read/%d\n", pin));
+            channel.get().writeAndFlush(format(":d-read/%d\n", pin)).get();
         } catch (Exception e) {
             throw Throwables.propagate(e);
         }
 
-        String msg = new ResponseFuture(channel.synchronousHandler).get();
+        String msg = responseFuture.get();
 
         LOG.debug("read value: {}", msg);
 

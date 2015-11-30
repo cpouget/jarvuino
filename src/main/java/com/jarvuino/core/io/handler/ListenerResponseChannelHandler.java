@@ -23,7 +23,7 @@ public class ListenerResponseChannelHandler extends SimpleChannelInboundHandler<
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, DigitalListenerMessage listenerMessage) throws Exception {
-        LOG.debug("read from channel");
+        LOG.debug("read from channel {}", listenerMessage);
 
         responses.get(listenerMessage.pin).onMessage(listenerMessage.msg);
     }

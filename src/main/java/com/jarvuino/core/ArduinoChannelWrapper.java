@@ -10,6 +10,7 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.rxtx.RxtxChannel;
 import io.netty.channel.rxtx.RxtxChannelOption;
+import io.netty.handler.codec.LineBasedFrameDecoder;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 
@@ -42,9 +43,10 @@ public class ArduinoChannelWrapper implements Closeable {
                 .handler(new ChannelInitializer<RxtxChannel>() {
                     @Override
                     public void initChannel(RxtxChannel ch) throws Exception {
-                        ch.config().setOption(RxtxChannelOption.WAIT_TIME, 2000);
+                        ch.config().setOption(RxtxChannelOption.WAIT_TIME, 5000);
 
                         ch.pipeline().addLast("encoder", new StringEncoder());
+                        ch.pipeline().addLast("line decoder", new LineBasedFrameDecoder(256));
                         ch.pipeline().addLast("string decoder", new StringDecoder());
                         ch.pipeline().addLast("jarvuino decoder", new MessageDecoder());
 

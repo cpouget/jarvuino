@@ -7,6 +7,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 
 import static com.google.common.collect.Queues.newArrayBlockingQueue;
@@ -23,7 +24,10 @@ public class SynchronousResponseChannelHandler extends SimpleChannelInboundHandl
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, JarvuinoSynchronousMessage synchronousMessage) throws Exception {
-        LOG.debug("read from channel");
+        LOG.debug("read from channel {}", synchronousMessage);
+
+        if (Objects.equals("ack", synchronousMessage.msg))
+            return;
 
         ResponseFuture responseFuture = responseFutures.take();
         responseFuture.onMessage(synchronousMessage.msg);

@@ -10,4 +10,11 @@ public class DigitalListenerMessage {
         this.msg = msg;
     }
 
+    @Override
+    public String toString() {
+        return "DigitalListenerMessage{" +
+                "pin=" + pin +
+                ", msg='" + msg + '\'' +
+                '}';
+    }
 }

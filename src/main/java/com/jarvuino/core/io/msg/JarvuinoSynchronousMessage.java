@@ -8,4 +8,10 @@ public class JarvuinoSynchronousMessage {
         this.msg = msg;
     }
 
+    @Override
+    public String toString() {
+        return "JarvuinoSynchronousMessage{" +
+                "msg='" + msg + '\'' +
+                '}';
+    }
 }
