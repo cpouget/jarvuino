@@ -23,27 +23,27 @@ public class DigitalIO {
         this.channel = channel;
     }
 
-    public void pinMode(int pin, PinMode mode) {
+    public void pinMode(int pin, PinMode mode) throws ArduinoIOException {
         LOG.debug("send command: pin-mode/{}/{}", pin, mode.ordinal());
 
         try {
             channel.get().writeAndFlush(format(":pin-mode/%d/%d\n", pin, mode.ordinal()));
         } catch (Exception e) {
-            throw Throwables.propagate(e);
+            throw new ArduinoIOException(e);
         }
     }
 
-    public void digitalWrite(int pin, PinPower value) throws ExecutionException, InterruptedException {
+    public void digitalWrite(int pin, PinPower value) throws ArduinoIOException {
         LOG.debug("send command: d-write/{}/{} [{}] ({} bytes)", pin, value.ordinal(), value.name(), format("d-write/%d/%d\n", pin, value.ordinal()).getBytes().length);
 
         try {
             channel.get().writeAndFlush(format(":d-write/%d/%d\n", pin, value.ordinal())).get();
         } catch (Exception e) {
-            throw Throwables.propagate(e);
+            throw new ArduinoIOException(e);
         }
     }
 
-    public String digitalRead(int pin) throws InterruptedException, ExecutionException, TimeoutException {
+    public String digitalRead(int pin) throws ArduinoIOException {
         LOG.debug("send command: d-read/{}", pin);
 
         ResponseFuture responseFuture = new ResponseFuture(channel.synchronousHandler);
@@ -51,15 +51,16 @@ public class DigitalIO {
         try {
             channel.get().writeAndFlush(format(":d-read/%d\n", pin)).get();
         } catch (Exception e) {
-            throw Throwables.propagate(e);
+            throw new ArduinoIOException(e);
         }
 
-        String msg = responseFuture.get();
-
-        LOG.debug("read value: {}", msg);
-
-        return msg;
+        try {
+            String msg = responseFuture.get();
+            LOG.debug("read value: {}", msg);
+            return msg;
+        } catch (Exception e) {
+            throw new ArduinoIOException(e);
+        }
     }
-
 
 }
