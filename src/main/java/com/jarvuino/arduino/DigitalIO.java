@@ -54,13 +54,18 @@ public class DigitalIO {
             throw new ArduinoIOException(e);
         }
 
+        String msg = null;
+
         try {
-            String msg = responseFuture.get();
-            LOG.debug("read value: {}", msg);
-            return msg;
+            msg = responseFuture.get();
         } catch (Exception e) {
             throw new ArduinoIOException(e);
         }
+
+        LOG.debug("read value: {}", msg);
+
+        return msg;
+
     }
 
 }
