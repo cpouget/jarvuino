@@ -1,11 +1,9 @@
 package com.jarvuino.arduino;
 
-/**
- * Created by cyrille on 03/12/15.
- */
-public class ArduinoIOException extends Exception{
+public class ArduinoIOException extends Exception {
 
-    public ArduinoIOException(){}
+    public ArduinoIOException() {
+    }
 
     public ArduinoIOException(String message) {
         super(message);
@@ -15,11 +13,8 @@ public class ArduinoIOException extends Exception{
         super(cause);
     }
 
-    public ArduinoIOException(String message, Throwable cause){
+    public ArduinoIOException(String message, Throwable cause) {
         super(message, cause);
     }
-
-
-
-
 }
+
