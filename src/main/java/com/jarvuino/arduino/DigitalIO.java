@@ -48,15 +48,10 @@ public class DigitalIO {
 
         ResponseFuture responseFuture = new ResponseFuture(channel.synchronousHandler);
 
-        try {
-            channel.get().writeAndFlush(format(":d-read/%d\n", pin)).get();
-        } catch (Exception e) {
-            throw new ArduinoIOException(e);
-        }
-
         String msg = null;
 
         try {
+            channel.get().writeAndFlush(format(":d-read/%d\n", pin)).get();
             msg = responseFuture.get();
         } catch (Exception e) {
             throw new ArduinoIOException(e);
