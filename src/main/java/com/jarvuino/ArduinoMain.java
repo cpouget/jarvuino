@@ -1,22 +1,21 @@
 package com.jarvuino;
 
+import com.jarvuino.arduino.ArduinoIOException;
 import com.jarvuino.arduino.DigitalIO;
 import com.jarvuino.core.ArduinoChannelWrapper;
-import com.jarvuino.core.io.ResponseListenerTask;
-import com.jarvuino.core.io.handler.ListenerResponseChannelHandler;
-import com.jarvuino.core.io.handler.SynchronousResponseChannelHandler;
+import com.jarvuino.core.io.handler.ResponseChannelHandler;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.oio.OioEventLoopGroup;
 import io.netty.channel.rxtx.RxtxDeviceAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.stream.IntStream;
 
+import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterruptibly;
 import static com.jarvuino.arduino.constants.PinPower.HIGH;
 import static com.jarvuino.arduino.constants.PinPower.LOW;
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 
 public class ArduinoMain {
@@ -27,40 +26,23 @@ public class ArduinoMain {
     public static void main(String[] args) throws Exception {
         EventLoopGroup group = new OioEventLoopGroup();
 
-        SynchronousResponseChannelHandler synchronousHandler = new SynchronousResponseChannelHandler();
-        ListenerResponseChannelHandler handler = new ListenerResponseChannelHandler();
+        ResponseChannelHandler synchronousHandler = new ResponseChannelHandler();
 
-        ExecutorService executorService = Executors.newFixedThreadPool(1);
-
-        ResponseListenerTask responseListenerTask = new ResponseListenerTask(13, handler) {
-            @Override
-            public void onMessage(String msg) {
-                LOG.info("message from pin #{}: {}", pin, msg);
-            }
-        };
-
-        executorService.submit(responseListenerTask);
-
-        ArduinoChannelWrapper arduinoChannelWrapper = new ArduinoChannelWrapper(new RxtxDeviceAddress(PORT), group, synchronousHandler, handler);
+        ArduinoChannelWrapper arduinoChannelWrapper = new ArduinoChannelWrapper(new RxtxDeviceAddress(PORT), group, synchronousHandler);
 
         try (ArduinoChannelWrapper channel = arduinoChannelWrapper.connect()) {
 
             DigitalIO digitalIO = new DigitalIO(channel);
 
-            digitalIO.digitalWrite(13, HIGH);
-            digitalIO.digitalWrite(13, LOW);
-            digitalIO.digitalWrite(13, HIGH);
-            digitalIO.digitalWrite(13, LOW);
-
-            digitalIO.digitalWrite(13, HIGH);
-            digitalIO.digitalRead(13);
-            digitalIO.digitalWrite(13, LOW);
-            digitalIO.digitalRead(13);
+            IntStream.range(0, 10_000)
+                    .forEach(value -> {
+                        try {
+                            digitalIO.digitalWrite(13, (value % 5 == value % 10) ? HIGH : LOW);
+                            sleepUninterruptibly(100, MILLISECONDS);
+                        } catch (ArduinoIOException e) {
+                            e.printStackTrace();
+                        }
+                    });
         }
-
-        responseListenerTask.stop();
-
-        executorService.shutdown();
-        executorService.awaitTermination(10, SECONDS);
     }
 }
