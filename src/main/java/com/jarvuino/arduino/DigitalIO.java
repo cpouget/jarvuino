@@ -1,15 +1,11 @@
 package com.jarvuino.arduino;
 
-import com.google.common.base.Throwables;
 import com.jarvuino.arduino.constants.PinMode;
 import com.jarvuino.arduino.constants.PinPower;
 import com.jarvuino.core.ArduinoChannelWrapper;
 import com.jarvuino.core.io.ResponseFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 import static java.lang.String.format;
 
@@ -27,7 +23,7 @@ public class DigitalIO {
         LOG.debug("send command: pin-mode/{}/{}", pin, mode.ordinal());
 
         try {
-            channel.get().writeAndFlush(format(":pin-mode/%d/%d\n", pin, mode.ordinal()));
+            channel.get().writeAndFlush(format(":pin-mode/%d/%d\n", pin, mode.ordinal())).sync();
         } catch (Exception e) {
             throw new ArduinoIOException(e);
         }
@@ -37,7 +33,7 @@ public class DigitalIO {
         LOG.debug("send command: d-write/{}/{} [{}] ({} bytes)", pin, value.ordinal(), value.name(), format("d-write/%d/%d\n", pin, value.ordinal()).getBytes().length);
 
         try {
-            channel.get().writeAndFlush(format(":d-write/%d/%d\n", pin, value.ordinal())).get();
+            channel.get().writeAndFlush(format(":d-write/%d/%d\n", pin, value.ordinal())).sync();
         } catch (Exception e) {
             throw new ArduinoIOException(e);
         }
@@ -46,21 +42,18 @@ public class DigitalIO {
     public String digitalRead(int pin) throws ArduinoIOException {
         LOG.debug("send command: d-read/{}", pin);
 
-        ResponseFuture responseFuture = new ResponseFuture(channel.synchronousHandler);
-
-        String msg = null;
-
         try {
-            channel.get().writeAndFlush(format(":d-read/%d\n", pin)).get();
-            msg = responseFuture.get();
+            ResponseFuture responseFuture = new ResponseFuture(channel.synchronousHandler);
+
+            channel.get().writeAndFlush(format(":d-read/%d\n", pin)).sync();
+            String msg = responseFuture.get();
+
+            LOG.debug("read value: {}", msg);
+
+            return msg;
         } catch (Exception e) {
             throw new ArduinoIOException(e);
         }
-
-        LOG.debug("read value: {}", msg);
-
-        return msg;
-
     }
 
 }

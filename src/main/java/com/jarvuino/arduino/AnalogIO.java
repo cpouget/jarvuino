@@ -3,9 +3,6 @@ package com.jarvuino.arduino;
 import com.jarvuino.arduino.constants.ReferenceVoltage;
 import com.jarvuino.core.ArduinoChannelWrapper;
 import com.jarvuino.core.io.ResponseFuture;
-import com.jarvuino.core.io.handler.SynchronousResponseChannelHandler;
-import io.netty.channel.Channel;
-import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +23,7 @@ public class AnalogIO {
         LOG.debug("send command: ref-volt/{}", refVolt.ordinal());
 
         try {
-            channel.get().writeAndFlush(format(":ref-volt/%d\n", refVolt.ordinal()));
+            channel.get().writeAndFlush(format(":ref-volt/%d\n", refVolt.ordinal())).sync();
         } catch (Exception e) {
             throw new ArduinoIOException(e);
         }
@@ -38,7 +35,7 @@ public class AnalogIO {
         LOG.debug("send command: a-write/{}/{}", pin, value);
 
         try {
-            channel.get().writeAndFlush(format(":a-write/%d/%d\n", pin, value)).get();
+            channel.get().writeAndFlush(format(":a-write/%d/%d\n", pin, value)).sync();
         } catch (Exception e) {
             throw new ArduinoIOException(e);
         }
@@ -50,17 +47,16 @@ public class AnalogIO {
 
         ResponseFuture responseFuture = new ResponseFuture(channel.synchronousHandler);
 
-        String msg = null;
         try {
-            channel.get().writeAndFlush(format(":a-read/%d\n", pin)).get();
-            msg = responseFuture.get();
+            channel.get().writeAndFlush(format(":a-read/%d\n", pin)).sync();
+
+            String msg = responseFuture.get();
+
+            LOG.debug("read value: {}", msg);
+
+            return msg;
         } catch (Exception e) {
             throw new ArduinoIOException(e);
         }
-
-        LOG.debug("read value: {}", msg);
-
-        return msg;
-
     }
 }

@@ -3,7 +3,7 @@ const int DIGITAL_PIN_NUMBERS = 14; // Change 14 if you have a different number 
 boolean digitalPinListening[DIGITAL_PIN_NUMBERS]; // Array used to know which pins on the Arduino must be listening.
 int digitalPinListenedValue[DIGITAL_PIN_NUMBERS]; // Array used to know which value is read last time.
 
-char fullInput[128];
+char fullInput[64];
 boolean incomingCommand = false;
 
 void blink(int n, int _delay) {
@@ -29,10 +29,12 @@ void setup() {
   pinMode(13, OUTPUT);
 }
 
+char* tokens[16];
+boolean error = false;
+char* errorMsg;
+
 void loop() {
   if(incomingCommand) {
-    char* tokens[32];
-
     char* token = strtok(fullInput, "/");
 
     int numberOfTokens = 0;
@@ -42,12 +44,28 @@ void loop() {
       token = strtok(NULL, "/");
     }
 
-    if(!strcmp("d-write", tokens[0])) {
+    if(!strcmp("pin-mode", tokens[0])) {
       String pin = tokens[1];
       String value = tokens[2];
 
-      digitalWrite(pin.toInt(), value.toInt());
-    } 
+      if (value == "0") {
+        pinMode(pin.toInt(), value.toInt());
+      } 
+      else if (value == "1") {
+        pinMode(pin.toInt(), value.toInt());
+      } 
+      else if (value == "2") {
+        pinMode(pin.toInt(), value.toInt());
+      } 
+      else {
+        error = true;
+        errorMsg = "pin-mode: invalid mode";
+      }
+    }
+
+    if(!strcmp("d-write", tokens[0])) {
+      digitalWrite(atoi(tokens[1]), atoi(tokens[2]));
+    }
 
     if(!strcmp("d-read", tokens[0])) {
       String pin = tokens[1];
@@ -56,7 +74,15 @@ void loop() {
 
       Serial.println(value);
     }
-    
+
+    if (error) {
+      Serial.print("err: ");
+      Serial.println(errorMsg);
+      Serial.flush();
+      free(errorMsg);
+      error = false;
+    }
+
     // clear all
     memset(fullInput,0,sizeof(fullInput));
     incomingCommand = false;
@@ -89,14 +115,17 @@ void serialEvent() {
     char c = (char) Serial.read();
 
     if (c == ':') {
-      Serial.readBytesUntil('\n', fullInput, 128);
+      Serial.readBytesUntil('\n', fullInput, 64);
       
       Serial.println("ack");
       Serial.flush();
+
       incomingCommand = true;
     }
   }
 }
+
+
 
 
 
