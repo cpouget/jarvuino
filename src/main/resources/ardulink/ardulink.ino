@@ -75,6 +75,43 @@ void loop() {
       Serial.println(value);
     }
 
+    if(!strcmp("no-tone", tokens[0])) {
+      noTone(atoi(tokens[1]);
+    }
+
+    if(!strcmp("tone", tokens[0])) {
+      if(numberOfTokens == 3) {
+        tone(atoi(tokens[1]), atoi(tokens[2]), atol(tokens[3]));
+        }
+      else if {
+        tone(atoi(tokens[1]), atoi(tokens[2]));
+      }
+    }
+
+    if(!strcmp("s-in", tokens[0])) {
+      byte value = shiftIn(atoi(tokens[1]), atoi(tokens[2]), atoi(tokens[3]));
+
+      Serial.println(value);
+    }
+
+    if(!strcmp("s-out", tokens[0]) {
+      shiftOut(atoi(tokens[1]), atoi(tokens[2]),atoi(tokens[3]), atoi(tokens[4]));
+    }
+
+    if(!strcmp("p-in", tokens[0])) {
+      if(numberOfTokens == 3) {
+        long value = pulseIn(atoi(tokens[1]), atoi(tokens[2]), atol(tokens[3]);
+
+        Serial.println(value);
+
+      }
+      else {
+        long value = pulseIn(atoi(tokens[1]), atoi(tokens[2]));
+
+        Serial.println(value);
+      }
+    }
+
     if (error) {
       Serial.print("err: ");
       Serial.println(errorMsg);
