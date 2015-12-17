@@ -1,13 +1,14 @@
-const int DIGITAL_PIN_NUMBERS = 14; // Change 14 if you have a different number of pins.
-
-boolean digitalPinListening[DIGITAL_PIN_NUMBERS]; // Array used to know which pins on the Arduino must be listening.
-int digitalPinListenedValue[DIGITAL_PIN_NUMBERS]; // Array used to know which value is read last time.
+#include <LiquidCrystal.h>
 
 char fullInput[64];
-boolean incomingCommand = false;
+boolean incomingCommand;
+char* tokens[16];
+char* errorMsg;
+
+LiquidCrystal lcd(12, 11, 7, 6, 5, 4);
 
 void blink(int n, int _delay) {
-  for(int i = 0; i < n; i++) {
+  for (int i = 0; i < n; i++) {
     digitalWrite(13, HIGH);
     delay(_delay);
     digitalWrite(13, LOW);
@@ -15,145 +16,129 @@ void blink(int n, int _delay) {
   }
 }
 
+int parseInput(char* input, char** tokens) {
+  char* token = strtok(input, "/");
+
+  int numberOfTokens = 0;
+
+  while (token) {
+    tokens[numberOfTokens++] = strdup(token);
+    token = strtok(NULL, "/");
+  }
+
+  return numberOfTokens;
+}
+
+void handleError(const char* errorMsg) {
+  Serial.print("err: ");
+  Serial.println(errorMsg);
+  Serial.flush();
+}
+
+void digitalFunctions(int numTokens, char** tokens) {
+  if (!strcmp("dig", tokens[0])) {
+
+    if (!strcmp("mode", tokens[1])) {
+      int value = atoi(tokens[3]);
+
+      if (value == 0) {
+        pinMode(atoi(tokens[2]), value);
+      } else if (value == 1) {
+        pinMode(atoi(tokens[2]), value);
+      } else if (value == 2) {
+        pinMode(atoi(tokens[2]), value);
+      } else {
+        handleError("pin-mode: invalid mode");
+      }
+    }
+
+    if (!strcmp("write", tokens[1])) {
+      digitalWrite(atoi(tokens[2]), atoi(tokens[3]));
+    }
+
+    if (!strcmp("read", tokens[1])) {
+      int value = digitalRead(atoi(tokens[2]));
+
+      Serial.println(value);
+    }
+  }
+}
+
+void extendedIOFunction(int numTokens, char** tokens) {
+  if (!strcmp("advio", tokens[0])) {
+    if (!strcmp("no-tone", tokens[1])) {
+      noTone(atoi(tokens[2]));
+    }
+
+    if (!strcmp("tone", tokens[1])) {
+      if (numTokens == 3) {
+        tone(atoi(tokens[2]), atoi(tokens[3]), atol(tokens[4]));
+      } else if (numTokens == 2) {
+        tone(atoi(tokens[2]), atoi(tokens[3]));
+      }
+    }
+
+    if (!strcmp("s-in", tokens[1])) {
+      byte value = shiftIn(atoi(tokens[2]), atoi(tokens[3]), atoi(tokens[4]));
+
+      Serial.println(value);
+    }
+
+    if (!strcmp("s-out", tokens[1])) {
+      shiftOut(atoi(tokens[2]), atoi(tokens[3]), atoi(tokens[4]),
+               atoi(tokens[5]));
+    }
+
+    if (!strcmp("p-in", tokens[1])) {
+      if (numTokens == 3) {
+        long value = pulseIn(atoi(tokens[2]), atoi(tokens[3]), atol(tokens[4]));
+
+        Serial.println(value);
+      } else {
+        long value = pulseIn(atoi(tokens[2]), atoi(tokens[3]));
+
+        Serial.println(value);
+      }
+    }
+  }
+}
+
 void setup() {
-  // initialize serial: (this is general code you can reuse)
   Serial.begin(115200);
 
-  //set to false all listen variable
-  int index = 0;
-  for (index = 0; index < DIGITAL_PIN_NUMBERS; index++) {
-    digitalPinListening[index] = false;
-    digitalPinListenedValue[index] = -1;
-  }
+  incomingCommand = false;
 
-  pinMode(13, OUTPUT);
+  lcd.begin(16, 2);
+  lcd.clear();
 }
-
-char* tokens[16];
-boolean error = false;
-char* errorMsg;
 
 void loop() {
-  if(incomingCommand) {
-    char* token = strtok(fullInput, "/");
+  if (incomingCommand) {
+    incomingCommand = false;
+    
+    lcd.home();
+    lcd.print(fullInput);
 
-    int numberOfTokens = 0;
+    int numberOfTokens = parseInput(fullInput, tokens);
 
-    while (token) {
-      tokens[numberOfTokens++] = strdup(token);
-      token = strtok(NULL, "/");
-    }
-
-    if(!strcmp("pin-mode", tokens[0])) {
-      String pin = tokens[1];
-      String value = tokens[2];
-
-      if (value == "0") {
-        pinMode(pin.toInt(), value.toInt());
-      } 
-      else if (value == "1") {
-        pinMode(pin.toInt(), value.toInt());
-      } 
-      else if (value == "2") {
-        pinMode(pin.toInt(), value.toInt());
-      } 
-      else {
-        error = true;
-        errorMsg = "pin-mode: invalid mode";
-      }
-    }
-
-    if(!strcmp("d-write", tokens[0])) {
-      digitalWrite(atoi(tokens[1]), atoi(tokens[2]));
-    }
-
-    if(!strcmp("d-read", tokens[0])) {
-      String pin = tokens[1];
-
-      int value = digitalRead(pin.toInt());
-
-      Serial.println(value);
-    }
-
-    if(!strcmp("no-tone", tokens[0])) {
-      noTone(atoi(tokens[1]);
-    }
-
-    if(!strcmp("tone", tokens[0])) {
-      if(numberOfTokens == 3) {
-        tone(atoi(tokens[1]), atoi(tokens[2]), atol(tokens[3]));
-        }
-      else if {
-        tone(atoi(tokens[1]), atoi(tokens[2]));
-      }
-    }
-
-    if(!strcmp("s-in", tokens[0])) {
-      byte value = shiftIn(atoi(tokens[1]), atoi(tokens[2]), atoi(tokens[3]));
-
-      Serial.println(value);
-    }
-
-    if(!strcmp("s-out", tokens[0]) {
-      shiftOut(atoi(tokens[1]), atoi(tokens[2]),atoi(tokens[3]), atoi(tokens[4]));
-    }
-
-    if(!strcmp("p-in", tokens[0])) {
-      if(numberOfTokens == 3) {
-        long value = pulseIn(atoi(tokens[1]), atoi(tokens[2]), atol(tokens[3]);
-
-        Serial.println(value);
-
-      }
-      else {
-        long value = pulseIn(atoi(tokens[1]), atoi(tokens[2]));
-
-        Serial.println(value);
-      }
-    }
-
-    if (error) {
-      Serial.print("err: ");
-      Serial.println(errorMsg);
-      Serial.flush();
-      free(errorMsg);
-      error = false;
-    }
+    digitalFunctions(numberOfTokens, tokens);
+    extendedIOFunction(numberOfTokens, tokens);
 
     // clear all
-    memset(fullInput,0,sizeof(fullInput));
-    incomingCommand = false;
+    memset(fullInput, 0, sizeof(fullInput));
 
-    for(int i = 0; i < numberOfTokens; i++)
+    for (int i = 0; i < numberOfTokens; i++)
       free(tokens[i]);
   }
-
 }
 
-// Reads 4 times and computes the average value
-int highPrecisionAnalogRead(int pin) {
-  int value1 = analogRead(pin);
-  int value2 = analogRead(pin);
-  int value3 = analogRead(pin);
-  int value4 = analogRead(pin);
-
-  int retvalue = (value1 + value2 + value3 + value4) / 4;
-}
-
-/*
-  SerialEvent occurs whenever a new data comes in the
- hardware serial RX.  This routine is run between each
- time loop() runs, so using delay inside loop can delay
- response.  Multiple bytes of data may be available.
- This is general code you can reuse.
- */
 void serialEvent() {
   if (Serial.available() > 0) {
     char c = (char) Serial.read();
 
     if (c == ':') {
       Serial.readBytesUntil('\n', fullInput, 64);
-      
+
       Serial.println("ack");
       Serial.flush();
 
@@ -161,23 +146,4 @@ void serialEvent() {
     }
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
