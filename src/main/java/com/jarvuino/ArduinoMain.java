@@ -1,5 +1,7 @@
 package com.jarvuino;
 
+import com.google.common.base.Throwables;
+import com.jarvuino.arduino.AnalogIO;
 import com.jarvuino.arduino.ArduinoIOException;
 import com.jarvuino.arduino.DigitalIO;
 import com.jarvuino.core.ArduinoChannelWrapper;
@@ -15,8 +17,7 @@ import java.util.stream.IntStream;
 import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterruptibly;
 import static com.jarvuino.arduino.constants.PinMode.OUTPUT;
 import static com.jarvuino.arduino.constants.PinPower.HIGH;
-import static com.jarvuino.arduino.constants.PinPower.LOW;
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 
 public class ArduinoMain {
@@ -34,21 +35,52 @@ public class ArduinoMain {
         try (ArduinoChannelWrapper channel = arduinoChannelWrapper.connect()) {
 
             DigitalIO digitalIO = new DigitalIO(channel);
+            AnalogIO analogIO = new AnalogIO(channel);
 
-            digitalIO.pinMode(13, OUTPUT);
+            int blue = 3;
+            int green = 9;
+            int red = 10;
 
-            IntStream.range(0, 3)
-                    .forEach(value -> {
-                        try {
-                            digitalIO.digitalWrite(13, HIGH);
-                            sleepUninterruptibly(1, SECONDS);
-                            digitalIO.digitalWrite(13, LOW);
-                        } catch (ArduinoIOException e) {
-                            e.printStackTrace();
-                        }
-                    });
+            digitalIO.pinMode(blue, OUTPUT);
+            digitalIO.pinMode(green, OUTPUT);
+            digitalIO.pinMode(red, OUTPUT);
 
-            digitalIO.digitalWrite(13, LOW);
+            digitalIO.digitalWrite(blue, HIGH);
+            digitalIO.digitalWrite(green, HIGH);
+            digitalIO.digitalWrite(red, HIGH);
+
+            IntStream.range(0, 256).forEach(value -> {
+                try {
+                    analogIO.analogWrite(blue, 255);
+                    analogIO.analogWrite(green, 255 - value);
+                    analogIO.analogWrite(red, value);
+                    sleepUninterruptibly(50, MILLISECONDS);
+                } catch (ArduinoIOException e) {
+                    throw Throwables.propagate(e);
+                }
+            });
+
+            IntStream.range(0, 256).forEach(value -> {
+                try {
+                    analogIO.analogWrite(green, 255);
+                    analogIO.analogWrite(red, 255 - value);
+                    analogIO.analogWrite(blue, value);
+                    sleepUninterruptibly(50, MILLISECONDS);
+                } catch (ArduinoIOException e) {
+                    throw Throwables.propagate(e);
+                }
+            });
+
+            IntStream.range(0, 256).forEach(value -> {
+                try {
+                    analogIO.analogWrite(red, 255);
+                    analogIO.analogWrite(blue, 255 - value);
+                    analogIO.analogWrite(green, value);
+                    sleepUninterruptibly(50, MILLISECONDS);
+                } catch (ArduinoIOException e) {
+                    throw Throwables.propagate(e);
+                }
+            });
         }
     }
 }

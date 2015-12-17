@@ -64,6 +64,39 @@ void digitalFunctions(int numTokens, char** tokens) {
   }
 }
 
+void analogFunctions(int numTokens, char** tokens) {
+  if (!strcmp("ana", tokens[0])) {
+
+    if (!strcmp("ref-volt", tokens[1])) {
+      int refVolt = atoi(tokens[2]);
+
+      if (refVolt == 0) {
+        analogReference(DEFAULT);
+      } else if (refVolt == 1) {
+        analogReference(INTERNAL);
+      } else if (refVolt == 2) {
+//        analogReference(INTERNAL1V1);
+      } else if (refVolt == 3) {
+//        analogReference(INTERNAL2V56);
+      } else if (refVolt == 4) {
+        analogReference(EXTERNAL);
+      } else {
+        handleError("ref-volt: invalid ref-volt mode");
+      }
+    }
+
+    if (!strcmp("write", tokens[1])) {
+      analogWrite(atoi(tokens[2]), atoi(tokens[3]));
+    }
+
+    if (!strcmp("read", tokens[1])) {
+      int value = analogRead(atoi(tokens[2]));
+
+      Serial.println(value);
+    }
+  }
+}
+
 void extendedIOFunction(int numTokens, char** tokens) {
   if (!strcmp("advio", tokens[0])) {
     if (!strcmp("no-tone", tokens[1])) {
@@ -115,13 +148,15 @@ void setup() {
 void loop() {
   if (incomingCommand) {
     incomingCommand = false;
-    
+
+    lcd.clear();
     lcd.home();
     lcd.print(fullInput);
 
     int numberOfTokens = parseInput(fullInput, tokens);
 
     digitalFunctions(numberOfTokens, tokens);
+    analogFunctions(numberOfTokens, tokens);
     extendedIOFunction(numberOfTokens, tokens);
 
     // clear all
