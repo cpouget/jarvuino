@@ -42,13 +42,13 @@ public class AnalogIO {
     }
 
     public String analogRead(int pin) throws ArduinoIOException {
+        ResponseFuture responseFuture = new ResponseFuture(channel.handler);
 
-        LOG.debug("send command: ana/read/{}", pin);
+        LOG.debug("send command: ana/read/{}/{}", responseFuture.callbackId, pin);
 
-        ResponseFuture responseFuture = new ResponseFuture(channel.synchronousHandler);
 
         try {
-            channel.get().writeAndFlush(format(":ana/read/%d\n", pin)).sync();
+            channel.get().writeAndFlush(format(":ana/read/%d/%d\n", responseFuture.callbackId, pin)).sync();
 
             String msg = responseFuture.get();
 

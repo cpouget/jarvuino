@@ -1,3 +1,4 @@
+
 #include <LiquidCrystal.h>
 
 char fullInput[64];
@@ -5,7 +6,7 @@ boolean incomingCommand;
 char* tokens[16];
 char* errorMsg;
 
-LiquidCrystal lcd(12, 11, 7, 6, 5, 4);
+LiquidCrystal *lcds[4];
 
 void blink(int n, int _delay) {
   for (int i = 0; i < n; i++) {
@@ -33,6 +34,56 @@ void handleError(const char* errorMsg) {
   Serial.print("err: ");
   Serial.println(errorMsg);
   Serial.flush();
+}
+
+void lcdFunctions(int numTokens, char** tokens) {
+  if (!strcmp("lcd", tokens[0])) {
+    int lcdId = atoi(tokens[1]);
+    
+    if (!strcmp("create", tokens[2])) {
+      LiquidCrystal lcd(atoi(tokens[3]), atoi(tokens[4]), atoi(tokens[5]), atoi(tokens[6]), atoi(tokens[7]), atoi(tokens[8]));
+      lcds[lcdId] = &lcd;
+      lcds[lcdId]->print("create");
+
+      delay(1000);
+      lcds[lcdId]->clear();
+    }
+
+    if (!strcmp("begin", tokens[2])) {
+      lcds[lcdId]->begin(atoi(tokens[3]), atoi(tokens[4]));
+      lcds[lcdId]->print("begin");
+
+      delay(1000);
+      lcds[lcdId]->clear();
+    }
+
+    if (!strcmp("clear", tokens[2])) {
+      lcds[lcdId]->clear();
+      lcds[lcdId]->print("clear");
+
+      delay(1000);
+      
+      lcds[lcdId]->clear();
+    }
+
+    if (!strcmp("home", tokens[2])) {
+      lcds[lcdId]->clear();
+      lcds[lcdId]->print("home");
+
+      delay(1000);
+      
+      lcds[lcdId]->home();
+    }
+
+    if (!strcmp("print", tokens[2])) {
+      lcds[lcdId]->clear();
+      lcds[lcdId]->print("print");
+
+      delay(1000);
+      lcds[lcdId]->clear();
+      lcds[lcdId]->print(tokens[3]);
+    }
+  }
 }
 
 void digitalFunctions(int numTokens, char** tokens) {
@@ -90,14 +141,14 @@ void analogFunctions(int numTokens, char** tokens) {
     }
 
     if (!strcmp("read", tokens[1])) {
-      int value = analogRead(atoi(tokens[2]));
-
-      Serial.println(value);
+      Serial.print(tokens[2]);
+      Serial.print(':');
+      Serial.println(analogRead(atoi(tokens[3])));
     }
   }
 }
 
-void extendedIOFunction(int numTokens, char** tokens) {
+void extendedIOFunctions(int numTokens, char** tokens) {
   if (!strcmp("advio", tokens[0])) {
     if (!strcmp("no-tone", tokens[1])) {
       noTone(atoi(tokens[2]));
@@ -140,24 +191,18 @@ void setup() {
   Serial.begin(115200);
 
   incomingCommand = false;
-
-  lcd.begin(16, 2);
-  lcd.clear();
 }
 
 void loop() {
   if (incomingCommand) {
     incomingCommand = false;
 
-    lcd.clear();
-    lcd.home();
-    lcd.print(fullInput);
-
     int numberOfTokens = parseInput(fullInput, tokens);
 
     digitalFunctions(numberOfTokens, tokens);
     analogFunctions(numberOfTokens, tokens);
-    extendedIOFunction(numberOfTokens, tokens);
+    extendedIOFunctions(numberOfTokens, tokens);
+    lcdFunctions(numberOfTokens, tokens);
 
     // clear all
     memset(fullInput, 0, sizeof(fullInput));

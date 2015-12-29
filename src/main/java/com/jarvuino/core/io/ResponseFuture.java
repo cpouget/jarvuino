@@ -5,8 +5,10 @@ import com.jarvuino.core.io.handler.ResponseChannelHandler;
 
 public class ResponseFuture extends AbstractFuture<String> implements ResponseListener<String> {
 
+    public final int callbackId;
+
     public ResponseFuture(ResponseChannelHandler handler) {
-        handler.addListener(this);
+        callbackId = handler.addListener(this);
     }
 
     @Override

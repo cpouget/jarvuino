@@ -43,7 +43,7 @@ public class DigitalIO {
         LOG.debug("send command: dig/read/{}", pin);
 
         try {
-            ResponseFuture responseFuture = new ResponseFuture(channel.synchronousHandler);
+            ResponseFuture responseFuture = new ResponseFuture(channel.handler);
 
             channel.get().writeAndFlush(format(":dig/read/%d\n", pin)).sync();
             String msg = responseFuture.get();

@@ -62,7 +62,7 @@ public class AdvancedIO {
     public String shiftIn(int dataPin, int clockPin, BitOrder bitOrder) throws ArduinoIOException {
         LOG.debug("send command: advio/s-in/{}/{}/{}", dataPin, clockPin, bitOrder);
 
-        ResponseFuture responseFuture = new ResponseFuture(channel.synchronousHandler);
+        ResponseFuture responseFuture = new ResponseFuture(channel.handler);
 
         try {
             channel.get().writeAndFlush(format(":advio/s-in/%d/%d/%d\n", dataPin, clockPin, bitOrder.ordinal())).sync();
@@ -77,7 +77,7 @@ public class AdvancedIO {
     public String pulseIn(int pin, PinPower value) throws ArduinoIOException {
         LOG.debug("send command: advio/p-in/{}/{}", pin, value);
 
-        ResponseFuture responseFuture = new ResponseFuture(channel.synchronousHandler);
+        ResponseFuture responseFuture = new ResponseFuture(channel.handler);
 
         try {
             channel.get().writeAndFlush(format(":advio/p-in/%d/%d", pin, value.ordinal())).sync();
@@ -93,7 +93,7 @@ public class AdvancedIO {
     public String pulseIn(int pin, PinPower value, long timeout) throws ArduinoIOException {
         LOG.debug("send command: advio/p-in/{}/{}/{}", pin, value, timeout);
 
-        ResponseFuture responseFuture = new ResponseFuture(channel.synchronousHandler);
+        ResponseFuture responseFuture = new ResponseFuture(channel.handler);
 
         try {
             channel.get().writeAndFlush(format(":advio/p-in/%d/%d/%d", pin, value.ordinal(), timeout)).sync();
