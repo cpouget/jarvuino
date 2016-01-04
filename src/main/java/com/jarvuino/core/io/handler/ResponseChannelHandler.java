@@ -38,16 +38,17 @@ public class ResponseChannelHandler extends SimpleChannelInboundHandler<ArduinoR
 
         if (message.id.isPresent() && responseFutures.containsKey(message.id.get())) {
             responseFutures.get(message.id.get()).onMessage(message.msg);
+            return;
         }
 
         throw new ArduinoIOException("unexpected message");
     }
 
     public Integer addListener(ResponseFuture responseFuture) {
-        Integer id = random.nextInt();
+        Integer id = Math.abs(random.nextInt());
 
         while (responseFutures.containsKey(id))
-            id = random.nextInt();
+            id = Math.abs(random.nextInt());
 
         responseFutures.put(id, responseFuture);
 

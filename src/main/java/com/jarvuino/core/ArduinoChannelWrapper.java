@@ -23,13 +23,13 @@ public class ArduinoChannelWrapper implements Closeable {
 
     private SocketAddress socketAddress;
     private EventLoopGroup group;
-    public final ResponseChannelHandler synchronousHandler;
+    public final ResponseChannelHandler handler;
     private Channel channel;
 
-    public ArduinoChannelWrapper(SocketAddress socketAddress, EventLoopGroup group, ResponseChannelHandler synchronousHandler) {
+    public ArduinoChannelWrapper(SocketAddress socketAddress, EventLoopGroup group, ResponseChannelHandler handler) {
         this.socketAddress = socketAddress;
         this.group = group;
-        this.synchronousHandler = synchronousHandler;
+        this.handler = handler;
     }
 
     public ArduinoChannelWrapper connect() {
@@ -48,7 +48,7 @@ public class ArduinoChannelWrapper implements Closeable {
                         ch.pipeline().addLast("string decoder", new StringDecoder());
                         ch.pipeline().addLast("jarvuino decoder", new MessageDecoder());
 
-                        ch.pipeline().addLast("synchronous handler", synchronousHandler);
+                        ch.pipeline().addLast("synchronous handler", handler);
                     }
                 });
 

@@ -20,32 +20,32 @@ public class DigitalIO {
     }
 
     public void pinMode(int pin, PinMode mode) throws ArduinoIOException {
-        LOG.debug("send command: pin-mode/{}/{}", pin, mode.ordinal());
+        LOG.debug("send command: dig/mode/{}/{}", pin, mode.ordinal());
 
         try {
-            channel.get().writeAndFlush(format(":pin-mode/%d/%d\n", pin, mode.ordinal())).sync();
+            channel.get().writeAndFlush(format(":dig/mode/%d/%d\n", pin, mode.ordinal())).sync();
         } catch (Exception e) {
             throw new ArduinoIOException(e);
         }
     }
 
     public void digitalWrite(int pin, PinPower value) throws ArduinoIOException {
-        LOG.debug("send command: d-write/{}/{} [{}] ({} bytes)", pin, value.ordinal(), value.name(), format("d-write/%d/%d\n", pin, value.ordinal()).getBytes().length);
+        LOG.debug("send command: dig/write/{}/{} [{}] ({} bytes)", pin, value.ordinal(), value.name(), format("d-write/%d/%d\n", pin, value.ordinal()).getBytes().length);
 
         try {
-            channel.get().writeAndFlush(format(":d-write/%d/%d\n", pin, value.ordinal())).sync();
+            channel.get().writeAndFlush(format(":dig/write/%d/%d\n", pin, value.ordinal())).sync();
         } catch (Exception e) {
             throw new ArduinoIOException(e);
         }
     }
 
     public String digitalRead(int pin) throws ArduinoIOException {
-        LOG.debug("send command: d-read/{}", pin);
+        LOG.debug("send command: dig/read/{}", pin);
 
         try {
-            ResponseFuture responseFuture = new ResponseFuture(channel.synchronousHandler);
+            ResponseFuture responseFuture = new ResponseFuture(channel.handler);
 
-            channel.get().writeAndFlush(format(":d-read/%d\n", pin)).sync();
+            channel.get().writeAndFlush(format(":dig/read/%d\n", pin)).sync();
             String msg = responseFuture.get();
 
             LOG.debug("read value: {}", msg);
